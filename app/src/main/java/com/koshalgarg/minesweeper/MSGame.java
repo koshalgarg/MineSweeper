@@ -13,6 +13,16 @@ class MSGame {
   private  Grid[][] gridsStatus;
   private  int time=0;
   private  int bombsLeft=0;
+    int rewarded=0;
+
+
+    public int getRewarded() {
+        return rewarded;
+    }
+
+    public void setRewarded(int rewarded) {
+        this.rewarded = rewarded;
+    }
 
     public int getTime() {
         return time;
@@ -33,6 +43,7 @@ class MSGame {
     MSGame(int m, int n, int b) {
 
 
+        rewarded=0;
         rows=m;
         cols=n;
         noOfBombs=b;
@@ -82,7 +93,7 @@ class MSGame {
             }
         }
 
-        Log.i("hg","gh");
+       // Log.i("hg","gh");
     }
 
     private int[][] placeBombs(int m, int n, int b) {
@@ -105,8 +116,11 @@ class MSGame {
 
             placed[a]=1;
 
-            bombs[i][0]=a/m;
+            bombs[i][0]=a/n;
             bombs[i][1]=a%n;
+
+
+           // Log.i("a",a+" "+ a/n+ " "+a%n);
         }
         return bombs;
     }

@@ -1,9 +1,11 @@
 package com.koshalgarg.minesweeper;
 
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
 import android.support.annotation.DrawableRes;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,10 +19,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.reward.RewardItem;
+import com.google.android.gms.ads.reward.RewardedVideoAd;
+import com.google.android.gms.ads.reward.RewardedVideoAdListener;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements RewardedVideoAdListener {
 
     LinearLayout ll;
 
@@ -34,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
     MediaPlayer mediaClick, mediaBlast;
     TextView tvBomb, tvTime;
     Timer timer;
+    private AdView mAdView;
+    private RewardedVideoAd mRewardedVideoAd;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +64,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void newGame() {
 
-        game = new MSGame(11, 9, 15);
+        if(!mRewardedVideoAd.isLoaded())
+            loadRewardedVideoAd();
+
+        game = new MSGame(16, 10, 15);
         tvBomb.setText("Bomb: " + game.getBombsLeft());
         tvTime.setText(setTime(game.getTime()));
 
@@ -86,10 +102,17 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
 
+                       // Toast.makeText(MainActivity.this, ""+((10*finalI)+finalJ), Toast.LENGTH_SHORT).show();
+
                         if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0 && game.getGridsStatus()[finalI][finalJ].getFlagged() == 0) {
                             if (game.getGridsStatus()[finalI][finalJ].getBomb() == 1) {
-                                gameOver();
-                                mediaBlast.start();
+
+                                if(mRewardedVideoAd.isLoaded() && game.getRewarded()==0){
+                                    showAlertDialog();
+                                }else {
+                                    gameOver();
+                                }
+
                             } else {
 
                                 mediaClick.start();
@@ -130,7 +153,40 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void showAlertDialog() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Do you want continue?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int id) {
+                        mRewardedVideoAd.show();
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        gameOver();
+                    }
+                });
+
+        //Creating dialog box
+        AlertDialog alert = builder.create();
+        //Setting the title manually
+        alert.setTitle("Save Me !!");
+        alert.show();
+
+    }
+
     private void initialize() {
+
+        MobileAds.initialize(this, "ca-app-pub-6690454024464967~5280800709");
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+        mRewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this);
+        mRewardedVideoAd.setRewardedVideoAdListener(this);
+
         numberImages = new int[9];
         numberImages[0] = R.drawable.open0;
         numberImages[1] = R.drawable.open1;
@@ -172,6 +228,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void gameOver() {
+
+
+        mediaBlast.start();
 
         timer.cancel();
 
@@ -221,6 +280,53 @@ public class MainActivity extends AppCompatActivity {
             else
                 base.setImageResource(numberImages[num]);
         }
+    }
+
+    @Override
+    public void onRewardedVideoAdLoaded() {
+        Toast.makeText(this, "Loaded", Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Override
+    public void onRewardedVideoAdOpened() {
+
+    }
+
+    @Override
+    public void onRewardedVideoStarted() {
+
+    }
+
+    @Override
+    public void onRewardedVideoAdClosed() {
+        if(game.getRewarded()==0){
+            gameOver();
+            Toast.makeText(this, "Closed", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRewarded(RewardItem rewardItem) {
+        game.setRewarded(1);
+    }
+
+    @Override
+    public void onRewardedVideoAdLeftApplication() {
+        //gameOver();
+    }
+
+    @Override
+    public void onRewardedVideoAdFailedToLoad(int i) {
+      //  Toast.makeText(this, "Failed to load Video", Toast.LENGTH_SHORT).show();
+        loadRewardedVideoAd();
+    }
+
+    @Override
+    public void onRewardedVideoCompleted() {
+
+        //Toast.makeText(this, "Completed", Toast.LENGTH_SHORT).show();
+
     }
 
     class updateTime extends TimerTask {
@@ -313,4 +419,9 @@ public class MainActivity extends AppCompatActivity {
 
         super.onPause();
     }*/
+
+    private void loadRewardedVideoAd() {
+        mRewardedVideoAd.loadAd("ca-app-pub-3940256099942544/5224354917",
+                new AdRequest.Builder().build());
+    }
 }
