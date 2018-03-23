@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">MineSweeper</string>
+    <string name="gridsize">40dp</string>
+
+</resources>
