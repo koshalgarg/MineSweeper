@@ -284,7 +284,6 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         }
 
         timer.cancel();
-        mediaWin.start();
 
     }
 
@@ -306,8 +305,6 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             }
         }
         updateView(i, j);
-
-
     }
 
     private void gameOver() {
@@ -373,6 +370,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     @Override
     public void onRewardedVideoAdOpened() {
 
+
     }
 
     @Override
@@ -382,6 +380,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewardedVideoAdClosed() {
+
+
+
         if (game.getRewarded() == 0) {
             gameOver();
         }
@@ -389,7 +390,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewarded(RewardItem rewardItem) {
+
         game.setRewarded(1);
+
     }
 
     @Override
@@ -619,5 +622,26 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             }
         });
 
+    }
+
+    @Override
+    protected void onPause() {
+        timer.cancel();
+        int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
+        game.setTime(t);
+
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+
+
+        timer=new Timer();
+        timer.schedule(new updateTime(),1000);
+        timeStamp=System.currentTimeMillis();
+
+        super.onResume();
     }
 }
