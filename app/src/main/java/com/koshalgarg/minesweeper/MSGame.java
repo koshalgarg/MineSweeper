@@ -3,6 +3,8 @@ package com.koshalgarg.minesweeper;
 
 import android.util.Log;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.HashMap;
 import java.util.Random;
 
@@ -15,6 +17,16 @@ class MSGame {
   private  int bombsLeft=0;
     int rewarded=0;
 
+    private int gameOver=0;
+
+
+    public int getGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(int gameOver) {
+        this.gameOver = gameOver;
+    }
 
     public int getRewarded() {
         return rewarded;
@@ -54,7 +66,7 @@ class MSGame {
         for(int i=0;i<m;i++){
             for(int j=0;j<n;j++)
             {
-                gridsStatus[i][j]=new Grid();
+                gridsStatus[i][j]=new Grid(0,0,0,0);
             }
         }
 
@@ -64,6 +76,8 @@ class MSGame {
         for(int i=0;i<b;i++){
             gridsStatus[bombsPosition[i][0]][bombsPosition[i][1]]=new Grid(0,1,-1,0);
         }
+
+
         int x[]={0,0,1,1,1,-1,-1,-1};
         int y[]={1,-1,0,1,-1,0,1,-1};
 

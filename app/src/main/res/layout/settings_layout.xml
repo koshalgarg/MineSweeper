@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#3E80B4"
+    android:paddingLeft="30dp"
+    android:paddingRight="30dp"
+    android:orientation="vertical" >
+
+
+    <TextView
+        android:id="@+id/txt_dia"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="16dp"
+        android:text="Choose Level"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:textStyle="bold"/>
+
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#FFFFFF"
+            android:text="  12x9 Grid         20 Mines"
+            android:layout_margin="10dp"
+            android:id="@+id/l1"
+            />
+
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#FFFFFF"
+            android:text="  16x16 Grid      40 Mines"
+            android:layout_margin="10dp"
+            android:id="@+id/l2"
+            />
+
+
+        <RadioButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#FFFFFF"
+            android:text="  24x24 Grid      99 Mines"
+            android:layout_margin="10dp"
+            android:id="@+id/l3"
+            />
+
+    </RadioGroup>
+
+
+
+
+</LinearLayout>

@@ -1,12 +1,15 @@
 package com.koshalgarg.minesweeper;
 
 
+import com.google.gson.annotations.SerializedName;
+
 class Grid {
 
-  private int open;
-  private int bomb;
-  private int number;
-  private int flagged;
+
+    private int open;
+    private int bomb;
+    private int number;
+    private int flagged;
 
     public int getOpen() {
         return open;

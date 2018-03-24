@@ -8,9 +8,11 @@
         android:title="restart"
         app:showAsAction="always"/>
 
-    <item android:id="@+id/save"
-        android:icon="@drawable/ic_save_white_24dp"
-        android:title="save"
-        app:showAsAction="always"/>
+
+
+    <item android:id="@+id/settings"
+        android:title="Settings"
+        app:showAsAction="never"/>
+
 
 </menu>

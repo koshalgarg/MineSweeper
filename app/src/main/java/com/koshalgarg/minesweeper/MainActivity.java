@@ -1,21 +1,27 @@
 package com.koshalgarg.minesweeper;
 
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.DrawableRes;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +31,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.reward.RewardItem;
 import com.google.android.gms.ads.reward.RewardedVideoAd;
 import com.google.android.gms.ads.reward.RewardedVideoAdListener;
+import com.google.gson.Gson;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -40,13 +47,19 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     int[] numberImages;
 
     MSGame game;
-    MediaPlayer mediaClick, mediaBlast;
+    MediaPlayer mediaClick, mediaBlast, mediaWin;
     TextView tvBomb, tvTime;
     Timer timer;
     private AdView mAdView;
     private RewardedVideoAd mRewardedVideoAd;
+    Button obtnOpenAll;
+
+    SharedPreferences sharedPreferencse;
+    SharedPreferences.Editor edit;
 
 
+    int rows,cols,bombs;
+    long timeStamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,32 +69,45 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
         initialize();
 
-        newGame();
+        if(sharedPreferencse.getString("gameOn","").equals("1")){
+            String g=sharedPreferencse.getString("game"," ");
+            game=new Gson().fromJson(g,MSGame.class);
 
-
-
+            if(game.getGameOver()==0){
+                newGame();
+            }
+            else {
+                game=new MSGame(rows,cols,bombs);
+                newGame();
+            }
+        }
+        else {
+            game = new MSGame(16, 10, 15);
+            newGame();
+        }
     }
 
     private void newGame() {
 
-        if(!mRewardedVideoAd.isLoaded())
+        if (!mRewardedVideoAd.isLoaded())
             loadRewardedVideoAd();
 
-        game = new MSGame(16, 10, 15);
-        tvBomb.setText("Bomb: " + game.getBombsLeft());
-        tvTime.setText(setTime(game.getTime()));
+        timeStamp= System.currentTimeMillis();
 
-        if(llRows!=null)
-        {
-            for(int i=0;i<game.getRows();i++){
+        obtnOpenAll.setVisibility(View.GONE);
+
+        tvBomb.setText("Bomb: " + game.getBombsLeft());
+        tvTime.setText(setTime());
+
+        if (llRows != null) {
+            for (int i = 0; i < llRows.length; i++) {
                 llRows[i].removeAllViews();
             }
         }
 
 
-
         timer = new Timer();
-        timer.schedule(new  updateTime(), 0,1000);
+        timer.schedule(new updateTime(), 0, 1000);
 
 
         llRows = new LinearLayout[game.getRows()];
@@ -102,14 +128,12 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                     @Override
                     public void onClick(View v) {
 
-                       // Toast.makeText(MainActivity.this, ""+((10*finalI)+finalJ), Toast.LENGTH_SHORT).show();
-
                         if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0 && game.getGridsStatus()[finalI][finalJ].getFlagged() == 0) {
                             if (game.getGridsStatus()[finalI][finalJ].getBomb() == 1) {
 
-                                if(mRewardedVideoAd.isLoaded() && game.getRewarded()==0){
+                                if (mRewardedVideoAd.isLoaded() && game.getRewarded() == 0) {
                                     showAlertDialog();
-                                }else {
+                                } else {
                                     gameOver();
                                 }
 
@@ -128,16 +152,24 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
                         if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0) {
                             int f = game.getGridsStatus()[finalI][finalJ].getFlagged();
-                            if(f==1){
-                                game.setBombsLeft(game.getBombsLeft()+1);
+                            if (f == 1) {
+                                game.setBombsLeft(game.getBombsLeft() + 1);
                                 game.getGridsStatus()[finalI][finalJ].setFlagged(0);
-                            }
-                            else{
-                                game.setBombsLeft(game.getBombsLeft()-1);
+
+
+                                mAdView.setVisibility(View.VISIBLE);
+                                obtnOpenAll.setVisibility(View.GONE);
+                            } else {
+                                game.setBombsLeft(game.getBombsLeft() - 1);
                                 game.getGridsStatus()[finalI][finalJ].setFlagged(1);
 
+                                if (game.getBombsLeft() == 0) {
+                                    obtnOpenAll.setVisibility(View.VISIBLE);
+                                    mAdView.setVisibility(View.GONE);
+                                }
+
                             }
-                            tvBomb.setText("Bomb: "+game.getBombsLeft());
+                            tvBomb.setText("Bomb: " + game.getBombsLeft());
 
 
                             updateView(finalI, finalJ);
@@ -155,27 +187,32 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     private void showAlertDialog() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Do you want continue?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.save_layout, null);
 
-                    public void onClick(DialogInterface dialog, int id) {
-                        mRewardedVideoAd.show();
-                    }
-                })
-                .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        gameOver();
-                    }
-                });
+        TextView yes= (TextView) alertLayout.findViewById(R.id.btn_yes);
+        TextView no= (TextView) alertLayout.findViewById(R.id.btn_no);
 
-        //Creating dialog box
-        AlertDialog alert = builder.create();
-        //Setting the title manually
-        alert.setTitle("Save Me !!");
-        alert.show();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setView(alertLayout);
+        alert.setCancelable(false);
+        final AlertDialog dialog = alert.create();
+        dialog.show();
 
+        yes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                mRewardedVideoAd.show();
+            }
+        });
+        no.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                gameOver();
+            }
+        });
     }
 
     private void initialize() {
@@ -200,9 +237,55 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
         mediaClick = MediaPlayer.create(this, R.raw.click_x);
         mediaBlast = MediaPlayer.create(this, R.raw.explosion);
+        mediaWin = MediaPlayer.create(this, R.raw.explosion); //TODO applause
 
         tvBomb = (TextView) findViewById(R.id.tvBomb);
         tvTime = (TextView) findViewById(R.id.tvTime);
+        obtnOpenAll = (Button) findViewById(R.id.open);
+
+        obtnOpenAll.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (game.getBombsLeft() != 0)
+                    return;
+
+                openAll();
+
+            }
+        });
+
+        sharedPreferencse = getSharedPreferences("myPref",
+                Context.MODE_PRIVATE);
+        edit=sharedPreferencse.edit();
+
+
+        rows= Integer.parseInt(sharedPreferencse.getString("rows","16"));
+        cols= Integer.parseInt(sharedPreferencse.getString("cols","16"));
+        bombs=Integer.parseInt(sharedPreferencse.getString("bombs","40"));
+
+    }
+
+    private void openAll() {
+        game.setGameOver(1);
+        for (int i = 0; i < game.getRows(); i++) {
+            for (int j = 0; j < game.getCols(); j++) {
+
+                Grid grid = game.getGridsStatus()[i][j];
+                if (grid.getOpen() == 0) {
+                    if (grid.getBomb() == 1 && grid.getFlagged() == 0) {
+                        gameOver();
+                        return;
+                    }
+                    grid.setOpen(1);
+                    updateView(i, j);
+                }
+
+            }
+        }
+
+        timer.cancel();
+        mediaWin.start();
+
     }
 
     private void click(int i, int j) {
@@ -216,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                 int q = j + y[k];
 
                 if (p >= 0 && p < game.getRows() && q >= 0 && q < game.getCols()) {
-                    if (game.getGridsStatus()[p][q].getOpen() == 0 && game.getGridsStatus()[p][q].getBomb() != 1) {
+                    if (game.getGridsStatus()[p][q].getOpen() == 0 && game.getGridsStatus()[p][q].getBomb() != 1 &&game.getGridsStatus()[p][q].getFlagged() != 1) {
                         click(p, q);
                     }
                 }
@@ -230,6 +313,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     private void gameOver() {
 
 
+        game.setGameOver(1);
         mediaBlast.start();
 
         timer.cancel();
@@ -269,22 +353,20 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
         } else {
             int num = grid.getNumber();
-            if (num == -1){
+            if (num == -1) {
 
-                if(grid.getFlagged()==1)
+                if (grid.getFlagged() == 1)
                     base.setImageResource(R.drawable.bombrevealed);
                 else
                     base.setImageResource(R.drawable.bombdeath);
 
-            }
-            else
+            } else
                 base.setImageResource(numberImages[num]);
         }
     }
 
     @Override
     public void onRewardedVideoAdLoaded() {
-        Toast.makeText(this, "Loaded", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -300,9 +382,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewardedVideoAdClosed() {
-        if(game.getRewarded()==0){
+        if (game.getRewarded() == 0) {
             gameOver();
-            Toast.makeText(this, "Closed", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -318,14 +399,11 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewardedVideoAdFailedToLoad(int i) {
-      //  Toast.makeText(this, "Failed to load Video", Toast.LENGTH_SHORT).show();
         loadRewardedVideoAd();
     }
 
     @Override
     public void onRewardedVideoCompleted() {
-
-        //Toast.makeText(this, "Completed", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -335,8 +413,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    game.setTime(game.getTime()+1);
-                    tvTime.setText(setTime(game.getTime()));
+                    tvTime.setText(setTime());
                 }
             });
 
@@ -344,39 +421,40 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         }
     }
 
-    private String setTime(int time) {
-        String str="Time: ";
+    private String setTime() {
 
-        if(time<60){
-            String s="";
-            if(time<10)
-                s="0"+time;
-            str+=s;
-        }
-        else if(time<3600){
-            String m= String.valueOf(time/60);
-            String s= String.valueOf(time%60);
+        long time=game.getTime()+( System.currentTimeMillis() - timeStamp )/1000;
 
-            if(m.length()==1)
-                m="0"+m;
-            if(s.length()==1)
-                s="0"+s;
+        String str = "Time: ";
 
-            str=str+m+":"+s;
-        }
-        else{
-            int h=time/3600;
-            time%=3600;
-            String m= String.valueOf(time/60);
-            String s= String.valueOf(time%60);
+        if (time < 60) {
+            String s = String.valueOf(time);
+            if (time < 10)
+                s = "0" + time;
+            str += s;
+        } else if (time < 3600) {
+            String m = String.valueOf(time / 60);
+            String s = String.valueOf(time % 60);
 
-            if(m.length()==1)
-                m="0"+m;
-            if(s.length()==1)
-                s="0"+s;
+            if (m.length() == 1)
+                m = "0" + m;
+            if (s.length() == 1)
+                s = "0" + s;
+
+            str = str + m + ":" + s;
+        } else {
+            long h = time / 3600;
+            time %= 3600;
+            String m = String.valueOf(time / 60);
+            String s = String.valueOf(time % 60);
+
+            if (m.length() == 1)
+                m = "0" + m;
+            if (s.length() == 1)
+                s = "0" + s;
 
 
-            str=str+h+":"+m+":"+s;
+            str = str + h + ":" + m + ":" + s;
         }
         return str;
     }
@@ -393,35 +471,153 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.restart:
+                game=new MSGame(rows,cols,bombs);
                 newGame();
                 return true;
-            case R.id.save:
+            case R.id.settings:
+                showSettingsDialog();
                 return true;
+
+
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-/*
-    @Override
-    protected void onResume() {
+    private void showSettingsDialog() {
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.settings_layout, null);
 
-        if(timer!=null)
-            timer.schedule(new updateTime(),1000);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setView(alertLayout);
+        alert.setCancelable(true);
+        final AlertDialog dialog = alert.create();
+        dialog.show();
 
-        super.onResume();
+        final int[] level = {0};
+
+        RadioButton l1= (RadioButton) alertLayout.findViewById(R.id.l1);
+        RadioButton l2= (RadioButton) alertLayout.findViewById(R.id.l2);
+        RadioButton l3= (RadioButton) alertLayout.findViewById(R.id.l3);
+
+        l1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                level[0] =1;
+                dialog.dismiss();
+
+                edit.putString("rows","12");
+                edit.putString("cols","9");
+                edit.putString("bombs","20");
+                edit.apply();
+
+
+                rows=12;
+                cols=9;
+                bombs=10;
+
+                game=new MSGame(rows,cols,bombs);
+
+                newGame();
+            }
+        });
+
+
+        l2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                level[0] =2;
+                dialog.dismiss();
+                edit.putString("rows","16");
+                edit.putString("cols","16");
+                edit.putString("bombs","40");
+                edit.apply();
+
+                rows=16;
+                cols=16;
+                bombs=40;
+
+                game=new MSGame(rows,cols,bombs);
+
+                newGame();
+
+
+            }
+        });
+
+        l3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                level[0] =3;
+                dialog.dismiss();
+
+                edit.putString("rows","24");
+                edit.putString("cols","24");
+                edit.putString("bombs","100");
+                edit.apply();
+
+                rows=24;
+                cols=24;
+                bombs=100;
+
+                game=new MSGame(rows,cols,bombs);
+                newGame();
+
+            }
+        });
+
+    }
+
+    private void saveGameAndQuit() {
+
+
+        int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
+        game.setTime(t);
+        Gson gson = new Gson();
+        String s = gson.toJson(game);
+        edit.putString("gameOn","1");
+        edit.putString("game",s);
+        edit.apply();
+    }
+
+    private void loadRewardedVideoAd() {
+        mRewardedVideoAd.loadAd("ca-app-pub-6690454024464967/6882012207",
+                new AdRequest.Builder().build());
     }
 
     @Override
-    protected void onPause() {
+    public void onBackPressed() {
 
-        timer.cancel();
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.exit_layout, null);
 
-        super.onPause();
-    }*/
+        TextView yes= (TextView) alertLayout.findViewById(R.id.btn_yes);
+        TextView no= (TextView) alertLayout.findViewById(R.id.btn_no);
 
-    private void loadRewardedVideoAd() {
-        mRewardedVideoAd.loadAd("ca-app-pub-3940256099942544/5224354917",
-                new AdRequest.Builder().build());
+
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setView(alertLayout);
+        alert.setCancelable(true);
+        final AlertDialog dialog = alert.create();
+        dialog.show();
+
+
+        yes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                saveGameAndQuit();
+                MainActivity.super.onBackPressed();
+
+            }
+        });
+        no.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
     }
 }
