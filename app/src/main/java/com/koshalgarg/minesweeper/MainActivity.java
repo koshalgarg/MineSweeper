@@ -128,9 +128,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                 Context.MODE_PRIVATE);
         edit=sharedPreferencse.edit();
 
-        rows= Integer.parseInt(sharedPreferencse.getString("rows","16"));
-        cols= Integer.parseInt(sharedPreferencse.getString("cols","16"));
-        bombs=Integer.parseInt(sharedPreferencse.getString("bombs","40"));
+        rows= Integer.parseInt(sharedPreferencse.getString("rows","13"));
+        cols= Integer.parseInt(sharedPreferencse.getString("cols","10"));
+        bombs=Integer.parseInt(sharedPreferencse.getString("bombs","25"));
 
     }
 
@@ -413,6 +413,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     @Override
     public void onRewardedVideoAdClosed() {
 
+        loadRewardedVideoAd();
+
         if (game.getRewarded() == 0) {
             gameOver(1);
         }
@@ -420,6 +422,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewarded(RewardItem rewardItem) {
+
+        loadRewardedVideoAd();
 
         game.setRewarded(1);
 
@@ -538,13 +542,13 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                 level[0] =1;
                 dialog.dismiss();
 
-                edit.putString("rows","12");
+                edit.putString("rows","13");
                 edit.putString("cols","10");
-                edit.putString("bombs","20");
+                edit.putString("bombs","25");
                 edit.apply();
 
 
-                rows=12;
+                rows=13;
                 cols=10;
                 bombs=10;
 

@@ -31,7 +31,7 @@
             android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:buttonTint="#FFFFFF"
-            android:text="  12x9 Grid         20 Mines"
+            android:text="  13x10 Grid      25 Mines"
             android:layout_margin="10dp"
             android:id="@+id/l1"
             />
@@ -55,7 +55,7 @@
             android:textSize="16sp"
             android:textColor="#FFFFFF"
             android:buttonTint="#FFFFFF"
-            android:text="  24x24 Grid      99 Mines"
+            android:text="  24x24 Grid      100 Mines"
             android:layout_margin="10dp"
             android:id="@+id/l3"
             />
