@@ -17,6 +17,16 @@ class MSGame {
   private  int bombsLeft=0;
     int rewarded=0;
 
+    int moves=0;
+
+    public int getMoves() {
+        return moves;
+    }
+
+    public void setMoves(int moves) {
+        this.moves = moves;
+    }
+
     private int gameOver=0;
 
 

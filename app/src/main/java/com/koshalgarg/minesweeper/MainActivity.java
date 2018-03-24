@@ -3,14 +3,10 @@ package com.koshalgarg.minesweeper;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.media.MediaPlayer;
-import android.provider.MediaStore;
-import android.provider.Settings;
-import android.support.annotation.DrawableRes;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,6 +29,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAd;
 import com.google.android.gms.ads.reward.RewardedVideoAdListener;
 import com.google.gson.Gson;
 
+import java.sql.Time;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -82,137 +79,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             }
         }
         else {
-            game = new MSGame(16, 10, 15);
+            game = new MSGame(rows,cols,bombs);
             newGame();
         }
-    }
-
-    private void newGame() {
-
-        if (!mRewardedVideoAd.isLoaded())
-            loadRewardedVideoAd();
-
-        timeStamp= System.currentTimeMillis();
-
-        obtnOpenAll.setVisibility(View.GONE);
-
-        tvBomb.setText("Bomb: " + game.getBombsLeft());
-        tvTime.setText(setTime());
-
-        if (llRows != null) {
-            for (int i = 0; i < llRows.length; i++) {
-                llRows[i].removeAllViews();
-            }
-        }
-
-
-        timer = new Timer();
-        timer.schedule(new updateTime(), 0, 1000);
-
-
-        llRows = new LinearLayout[game.getRows()];
-        llGrids = new FrameLayout[game.getRows()][game.getCols()];
-
-        for (int i = 0; i < game.getRows(); i++) {
-            llRows[i] = (LinearLayout) getLayoutInflater().inflate(R.layout.row, null);
-
-            for (int j = 0; j < game.getCols(); j++) {
-                llGrids[i][j] = (FrameLayout) getLayoutInflater().inflate(R.layout.grid, null);
-                llGrids[i][j].setTag(new Tag(i, j));
-
-                updateView(i, j);
-
-                final int finalI = i;
-                final int finalJ = j;
-                llGrids[i][j].setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0 && game.getGridsStatus()[finalI][finalJ].getFlagged() == 0) {
-                            if (game.getGridsStatus()[finalI][finalJ].getBomb() == 1) {
-
-                                if (mRewardedVideoAd.isLoaded() && game.getRewarded() == 0) {
-                                    showAlertDialog();
-                                } else {
-                                    gameOver();
-                                }
-
-                            } else {
-
-                                mediaClick.start();
-                                click(finalI, finalJ);
-                            }
-                        }
-                    }
-                });
-
-                llGrids[i][j].setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override
-                    public boolean onLongClick(View v) {
-
-                        if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0) {
-                            int f = game.getGridsStatus()[finalI][finalJ].getFlagged();
-                            if (f == 1) {
-                                game.setBombsLeft(game.getBombsLeft() + 1);
-                                game.getGridsStatus()[finalI][finalJ].setFlagged(0);
-
-
-                                mAdView.setVisibility(View.VISIBLE);
-                                obtnOpenAll.setVisibility(View.GONE);
-                            } else {
-                                game.setBombsLeft(game.getBombsLeft() - 1);
-                                game.getGridsStatus()[finalI][finalJ].setFlagged(1);
-
-                                if (game.getBombsLeft() == 0) {
-                                    obtnOpenAll.setVisibility(View.VISIBLE);
-                                    mAdView.setVisibility(View.GONE);
-                                }
-
-                            }
-                            tvBomb.setText("Bomb: " + game.getBombsLeft());
-
-
-                            updateView(finalI, finalJ);
-                        }
-                        return true;
-                    }
-                });
-
-                llRows[i].addView(llGrids[i][j]);
-            }
-            ll.addView(llRows[i]);
-        }
-
-    }
-
-    private void showAlertDialog() {
-
-        LayoutInflater inflater = getLayoutInflater();
-        View alertLayout = inflater.inflate(R.layout.save_layout, null);
-
-        TextView yes= (TextView) alertLayout.findViewById(R.id.btn_yes);
-        TextView no= (TextView) alertLayout.findViewById(R.id.btn_no);
-
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setView(alertLayout);
-        alert.setCancelable(false);
-        final AlertDialog dialog = alert.create();
-        dialog.show();
-
-        yes.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                mRewardedVideoAd.show();
-            }
-        });
-        no.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                gameOver();
-            }
-        });
     }
 
     private void initialize() {
@@ -254,10 +123,10 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             }
         });
 
+        timer=new Timer();
         sharedPreferencse = getSharedPreferences("myPref",
                 Context.MODE_PRIVATE);
         edit=sharedPreferencse.edit();
-
 
         rows= Integer.parseInt(sharedPreferencse.getString("rows","16"));
         cols= Integer.parseInt(sharedPreferencse.getString("cols","16"));
@@ -265,25 +134,182 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     }
 
+
+    private void newGame() {
+
+        if (!mRewardedVideoAd.isLoaded())
+            loadRewardedVideoAd();
+
+        timeStamp= System.currentTimeMillis();
+
+        obtnOpenAll.setVisibility(View.GONE);
+
+        tvBomb.setText("Mine: " + game.getBombsLeft());
+        tvTime.setText(setTime());
+
+        if (llRows != null) {
+            for (int i = 0; i < llRows.length; i++) {
+                llRows[i].removeAllViews();
+            }
+        }
+
+        timer.cancel();
+        timer=new Timer();
+        timer.schedule(new updateTime(), 0, 1000);
+
+
+        llRows = new LinearLayout[game.getRows()];
+        llGrids = new FrameLayout[game.getRows()][game.getCols()];
+
+        for (int i = 0; i < game.getRows(); i++) {
+            llRows[i] = (LinearLayout) getLayoutInflater().inflate(R.layout.row, null);
+
+            for (int j = 0; j < game.getCols(); j++) {
+                llGrids[i][j] = (FrameLayout) getLayoutInflater().inflate(R.layout.grid, null);
+                llGrids[i][j].setTag(new Tag(i, j));
+
+                updateView(i, j);
+
+                final int finalI = i;
+                final int finalJ = j;
+                llGrids[i][j].setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0 && game.getGridsStatus()[finalI][finalJ].getFlagged() == 0) {
+                            game.setMoves(game.getMoves()+1);
+                            if (game.getGridsStatus()[finalI][finalJ].getBomb() == 1) {
+
+                                if (mRewardedVideoAd.isLoaded() && game.getRewarded() == 0) {
+                                    showAlertDialog();
+                                } else {
+                                    gameOver(0);
+                                }
+
+                            } else {
+
+                                mediaClick.start();
+                                click(finalI, finalJ);
+                            }
+                        }
+                    }
+                });
+
+                llGrids[i][j].setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+
+                        if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0) {
+                            int f = game.getGridsStatus()[finalI][finalJ].getFlagged();
+                            if (f == 1 && game.getBombsLeft()!=game.getNoOfBombs()) {
+
+                                game.setMoves(game.getMoves()+1);
+
+                                game.setBombsLeft(game.getBombsLeft() + 1);
+                                game.getGridsStatus()[finalI][finalJ].setFlagged(0);
+                                mAdView.setVisibility(View.VISIBLE);
+                                obtnOpenAll.setVisibility(View.GONE);
+                            } else if(f == 0 && game.getBombsLeft()!=0) {
+                                game.setMoves(game.getMoves()+1);
+                                game.setBombsLeft(game.getBombsLeft() - 1);
+                                game.getGridsStatus()[finalI][finalJ].setFlagged(1);
+
+                                if (game.getBombsLeft() == 0) {
+                                    obtnOpenAll.setVisibility(View.VISIBLE);
+                                    mAdView.setVisibility(View.GONE);
+                                }
+
+                            }
+                            tvBomb.setText("Mine: " + game.getBombsLeft());
+
+
+                            updateView(finalI, finalJ);
+                        }
+                        return true;
+                    }
+                });
+
+                llRows[i].addView(llGrids[i][j]);
+            }
+            ll.addView(llRows[i]);
+        }
+
+    }
+
+    private void showAlertDialog() {
+
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.save_layout, null);
+
+        TextView yes= (TextView) alertLayout.findViewById(R.id.btn_yes);
+        TextView no= (TextView) alertLayout.findViewById(R.id.btn_no);
+
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setView(alertLayout);
+        alert.setCancelable(false);
+        final AlertDialog dialog = alert.create();
+        dialog.show();
+
+        yes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                mRewardedVideoAd.show();
+            }
+        });
+        no.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+                gameOver(0);
+            }
+        });
+    }
+
+
     private void openAll() {
         game.setGameOver(1);
+
         for (int i = 0; i < game.getRows(); i++) {
             for (int j = 0; j < game.getCols(); j++) {
 
                 Grid grid = game.getGridsStatus()[i][j];
                 if (grid.getOpen() == 0) {
                     if (grid.getBomb() == 1 && grid.getFlagged() == 0) {
-                        gameOver();
+                        gameOver(0);
                         return;
                     }
                     grid.setOpen(1);
                     updateView(i, j);
                 }
-
             }
         }
 
+        int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
+        game.setTime(t);
         timer.cancel();
+        //Log.i("time","in open all" + game.getTime());
+
+
+
+        LayoutInflater inflater = getLayoutInflater();
+        View alertLayout = inflater.inflate(R.layout.win_alert, null);
+        TextView timwv= (TextView) alertLayout.findViewById(R.id.time);
+        timwv.setText(tvTime.getText().toString() + "\n" + "Moves: "+game.getMoves());
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setView(alertLayout);
+        alert.setCancelable(true);
+        final AlertDialog dialog = alert.create();
+        dialog.show();
+
+        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                game=new MSGame(rows,cols,bombs);
+                newGame();
+            }
+        });
+
 
     }
 
@@ -307,14 +333,18 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         updateView(i, j);
     }
 
-    private void gameOver() {
-
+    private void gameOver(int TimeSet) {
 
         game.setGameOver(1);
         mediaBlast.start();
-
         timer.cancel();
 
+        if(TimeSet==0)
+        {
+            int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
+            game.setTime(t);
+            //Log.i("time","in gameover" + game.getTime());
+        }
         Grid[][] gridstatus = game.getGridsStatus();
 
         for (int i = 0; i < game.getRows(); i++) {
@@ -365,6 +395,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     @Override
     public void onRewardedVideoAdLoaded() {
 
+        //Log.i("time","loaded");
+
     }
 
     @Override
@@ -381,10 +413,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     @Override
     public void onRewardedVideoAdClosed() {
 
-
-
         if (game.getRewarded() == 0) {
-            gameOver();
+            gameOver(1);
         }
     }
 
@@ -397,7 +427,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     public void onRewardedVideoAdLeftApplication() {
-        //gameOver();
+        //gameOver(0);
     }
 
     @Override
@@ -416,11 +446,10 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    tvTime.setText(setTime());
+                    if(game.getGameOver()==0)
+                        tvTime.setText(setTime());
                 }
             });
-
-
         }
     }
 
@@ -510,13 +539,13 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                 dialog.dismiss();
 
                 edit.putString("rows","12");
-                edit.putString("cols","9");
+                edit.putString("cols","10");
                 edit.putString("bombs","20");
                 edit.apply();
 
 
                 rows=12;
-                cols=9;
+                cols=10;
                 bombs=10;
 
                 game=new MSGame(rows,cols,bombs);
@@ -576,6 +605,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
         int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
         game.setTime(t);
+        //Log.i("time","in save and quit" + game.getTime() );
+
         Gson gson = new Gson();
         String s = gson.toJson(game);
         edit.putString("gameOn","1");
@@ -586,7 +617,11 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     private void loadRewardedVideoAd() {
         mRewardedVideoAd.loadAd("ca-app-pub-6690454024464967/6882012207",
                 new AdRequest.Builder().build());
-    }
+
+
+ /*       mRewardedVideoAd.loadAd("ca-app-pub-3940256099942544/5224354917",
+                new AdRequest.Builder().build());
+ */   }
 
     @Override
     public void onBackPressed() {
@@ -626,10 +661,14 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     @Override
     protected void onPause() {
-        timer.cancel();
-        int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
-        game.setTime(t);
 
+            timer.cancel();
+            int t= (int) (game.getTime()+ (System.currentTimeMillis() - timeStamp)/1000);
+            game.setTime(t);
+        //Log.i("time","in pause" + game.getTime());
+
+
+        //Toast.makeText(this, "paused "+game.getTime(), //Toast.LENGTH_SHORT).show();
 
         super.onPause();
     }
@@ -637,11 +676,12 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     @Override
     protected void onResume() {
 
-
+        //Log.i("time","resume"+game.getTime());
+        //Toast.makeText(this, "resume "+game.getTime(), //Toast.LENGTH_SHORT).show();
         timer=new Timer();
-        timer.schedule(new updateTime(),1000);
-        timeStamp=System.currentTimeMillis();
-
+            timer.schedule(new updateTime(),1000);
+            timeStamp=System.currentTimeMillis();
+        tvTime.setText(setTime());
         super.onResume();
     }
 }

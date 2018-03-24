@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="40dp"
-    android:layout_height="40dp">
+    android:layout_width="36dp"
+    android:layout_height="36dp">
 
 
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:src="@drawable/open0"
         android:contentDescription="@string/app_name" />
 
 
 
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:src="@drawable/blank_tile"
         android:id="@+id/base"
         android:contentDescription="@string/app_name" />
 
 
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
         android:id="@+id/top"
         android:visibility="gone"
         android:src="@drawable/blank_tile"
