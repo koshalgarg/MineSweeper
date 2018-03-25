@@ -166,8 +166,6 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
             for (int j = 0; j < game.getCols(); j++) {
                 llGrids[i][j] = (FrameLayout) getLayoutInflater().inflate(R.layout.grid, null);
-                llGrids[i][j].setTag(new Tag(i, j));
-
                 updateView(i, j);
 
                 final int finalI = i;
@@ -550,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
                 rows=13;
                 cols=10;
-                bombs=10;
+                bombs=25;
 
                 game=new MSGame(rows,cols,bombs);
 
