@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -39,6 +40,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.gson.Gson;
 
 import java.sql.Time;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
     int rows, cols, bombs;
     long timeStamp;
+    int clicked_i,clicked_j;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +81,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         if (sharedPreferencse.getString("gameOn", "").equals("1")) {
             String g = sharedPreferencse.getString("game", " ");
             game = new Gson().fromJson(g, MSGame.class);
+            
+            if (game.getGameOver() == 0 && game.getMoves()>0) {
 
-            if (game.getGameOver() == 0 || game.getMoves()==0) {
                 newGame();
             } else {
                 game = new MSGame(rows, cols, bombs);
@@ -95,8 +99,6 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
 
         long last_time_update_dialog_shown = Long.parseLong(sharedPreferencse.getString("last_time_update_dialog_shown", "0"));
-
-        last_time_update_dialog_shown = 0;
         final long cur = System.currentTimeMillis();
 
         if (cur - last_time_update_dialog_shown >= 86400000) {
@@ -109,7 +111,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                 edit.putString("last_time_update_dialog_shown", String.valueOf(cur));
                 edit.putString("update_available","0");
                 edit.apply();
-                Log.i("abc","show");
+                //Log.i("abc","show");
+                //Toast.makeText(this, "show", //Toast.LENGTH_SHORT).show();
             }
             else {
 
@@ -130,7 +133,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
                                     edit.putString("update_available","1");
                                     edit.putString("url",config.getString("url"));
-                                    Log.i("abc","1");
+                                    //Log.i("abc","1");
+                                    //Toast.makeText(MainActivity.this, "1", //Toast.LENGTH_SHORT).show();
 
 
                                 }
@@ -139,11 +143,11 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                                     edit.putString("update_available","1");
                                     edit.putString("show_update_dialog","1");
                                     edit.putString("url",config.getString("url"));
-                                    Log.i("abc","2");
-
+                                    //Log.i("abc","2");
+                                    //Toast.makeText(MainActivity.this, "2", //Toast.LENGTH_SHORT).show();
                                 }
+                                edit.apply();
                             }
-                            edit.apply();
                         }
                     }
                 });
@@ -300,11 +304,15 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                     @Override
                     public void onClick(View v) {
 
+
+                        clicked_i=finalI;
+                        clicked_j=finalJ;
+
                         if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0 && game.getGridsStatus()[finalI][finalJ].getFlagged() == 0) {
                             game.setMoves(game.getMoves() + 1);
                             if (game.getGridsStatus()[finalI][finalJ].getBomb() == 1) {
 
-                                if (mRewardedVideoAd.isLoaded() && game.getRewarded() == 0) {
+                                if (mRewardedVideoAd.isLoaded() && game.getRewarded() == 0 && game.getMoves()>10) {
                                     showAlertDialog();
                                 } else {
                                     gameOver(0);
@@ -324,27 +332,8 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
                     public boolean onLongClick(View v) {
 
                         if (game.getGridsStatus()[finalI][finalJ].getOpen() == 0) {
-                            int f = game.getGridsStatus()[finalI][finalJ].getFlagged();
-                            if (f == 1 && game.getBombsLeft() != game.getNoOfBombs()) {
 
-                                game.setMoves(game.getMoves() + 1);
-
-                                game.setBombsLeft(game.getBombsLeft() + 1);
-                                game.getGridsStatus()[finalI][finalJ].setFlagged(0);
-                                mAdView.setVisibility(View.VISIBLE);
-                                obtnOpenAll.setVisibility(View.GONE);
-                            } else if (f == 0 && game.getBombsLeft() != 0) {
-                                game.setMoves(game.getMoves() + 1);
-                                game.setBombsLeft(game.getBombsLeft() - 1);
-                                game.getGridsStatus()[finalI][finalJ].setFlagged(1);
-
-                                if (game.getBombsLeft() == 0) {
-                                    obtnOpenAll.setVisibility(View.VISIBLE);
-                                    mAdView.setVisibility(View.GONE);
-                                }
-
-                            }
-                            tvBomb.setText("Mine: " + game.getBombsLeft());
+                            flagOrUnflaf(finalI,finalJ);
 
 
                             updateView(finalI, finalJ);
@@ -358,6 +347,31 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
             ll.addView(llRows[i]);
         }
 
+    }
+
+    private void flagOrUnflaf(int finalI, int finalJ) {
+
+        int f = game.getGridsStatus()[finalI][finalJ].getFlagged();
+        if (f == 1 && game.getBombsLeft() != game.getNoOfBombs()) {
+
+            game.setMoves(game.getMoves() + 1);
+
+            game.setBombsLeft(game.getBombsLeft() + 1);
+            game.getGridsStatus()[finalI][finalJ].setFlagged(0);
+            mAdView.setVisibility(View.VISIBLE);
+            obtnOpenAll.setVisibility(View.GONE);
+        } else if (f == 0 && game.getBombsLeft() != 0) {
+            game.setMoves(game.getMoves() + 1);
+            game.setBombsLeft(game.getBombsLeft() - 1);
+            game.getGridsStatus()[finalI][finalJ].setFlagged(1);
+
+            if (game.getBombsLeft() == 0) {
+                obtnOpenAll.setVisibility(View.VISIBLE);
+                mAdView.setVisibility(View.GONE);
+            }
+
+        }
+        tvBomb.setText("Mine: " + game.getBombsLeft());
     }
 
     private void showAlertDialog() {
@@ -377,6 +391,10 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         yes.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                flagOrUnflaf(clicked_i,clicked_j);
+                updateView(clicked_i,clicked_j);
+
                 dialog.dismiss();
                 mRewardedVideoAd.show();
             }
@@ -418,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
         LayoutInflater inflater = getLayoutInflater();
         View alertLayout = inflater.inflate(R.layout.win_alert, null);
         TextView timwv = (TextView) alertLayout.findViewById(R.id.time);
-        timwv.setText(tvTime.getText().toString() + "\n" + "Moves: " + game.getMoves());
+        timwv.setText(rows+"x"+cols+" Grids "+bombs +" Mines"+"\n"+ tvTime.getText().toString() + "\n" + "Moves: " + game.getMoves());
         AlertDialog.Builder alert = new AlertDialog.Builder(this);
         alert.setView(alertLayout);
         alert.setCancelable(true);
@@ -437,6 +455,9 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     }
 
     private void click(int i, int j) {
+
+
+
         game.getGridsStatus()[i][j].setOpen(1);
         int x[] = {0, 0, 1, 1, 1, -1, -1, -1};
         int y[] = {1, -1, 0, 1, -1, 0, 1, -1};
@@ -457,6 +478,21 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
     }
 
     private void gameOver(int TimeSet) {
+
+        //TODO remove this
+        //to reduce the first click game over
+        if(game.getMoves()==1  && Math.abs(new Random().nextInt())%2==0){   //probability 25%
+            //Toast.makeText(this, "gameover", Toast.LENGTH_SHORT).show();
+
+            int[] placed=new int[rows*cols];
+            placed[cols*clicked_i+clicked_j]=1;
+
+            game=new MSGame(rows,cols,bombs,clicked_i,clicked_j);
+            newGame();
+            click(clicked_i,clicked_j);
+            updateView(clicked_i,clicked_j);
+            return;
+        }
 
         game.setGameOver(1);
         mediaBlast.start();
@@ -654,9 +690,77 @@ public class MainActivity extends AppCompatActivity implements RewardedVideoAdLi
 
         final int[] level = {0};
 
+        Button custom= (Button) alertLayout.findViewById(R.id.custom);
+        final EditText r= (EditText) alertLayout.findViewById(R.id.rows);
+        final EditText c= (EditText) alertLayout.findViewById(R.id.cols);
+        final EditText m= (EditText) alertLayout.findViewById(R.id.mines);
+        final TextView alertaa = (TextView) alertLayout.findViewById(R.id.alert);
+
+
+
+
         RadioButton l1 = (RadioButton) alertLayout.findViewById(R.id.l1);
         RadioButton l2 = (RadioButton) alertLayout.findViewById(R.id.l2);
         RadioButton l3 = (RadioButton) alertLayout.findViewById(R.id.l3);
+
+        custom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+
+             String   str_r=r.getText().toString();
+             String    str_c=c.getText().toString();
+             String   str_m=m.getText().toString();
+
+                if(str_c.length()==0 || str_m.length()==0 || str_r.length()==0)
+                    return;
+
+
+
+                int ro= Integer.parseInt(str_r);
+                int r1= Integer.parseInt(str_c);
+                int r2= Integer.parseInt(str_m);
+
+                if(ro <= 0 || r1==0 || r2 == 0 || ro*r1==1){
+                    return;
+                }
+
+                if (ro>24){
+                    alertaa.setVisibility(View.VISIBLE);
+                    alertaa.setText("Maximum number of rows is 24");
+                }else if (r1>24){
+                    alertaa.setText("Maximum number of columns is 24");
+                    alertaa.setVisibility(View.VISIBLE);
+
+                }
+                else if(r2>=ro*r1){
+                    alertaa.setText("Number of mines can not exceed number of grids ");
+                    alertaa.setVisibility(View.VISIBLE);
+                }
+                else {
+                    alertaa.setVisibility(View.GONE);
+
+                    dialog.dismiss();
+
+                    edit.putString("rows", String.valueOf(ro));
+                    edit.putString("cols", String.valueOf(r1));
+                    edit.putString("bombs", String.valueOf(r2));
+                    edit.apply();
+
+
+                    rows = ro;
+                    cols = r1;
+                    bombs = r2;
+
+                    game = new MSGame(rows, cols, bombs);
+
+                    newGame();
+
+                }
+
+
+            }
+        });
 
         l1.setOnClickListener(new View.OnClickListener() {
             @Override

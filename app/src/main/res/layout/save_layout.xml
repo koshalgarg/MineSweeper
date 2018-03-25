@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="16dp"
-        android:text="Save Me !!!"
+        android:text="Thats a mine."
         android:textColor="#FFFFFF"
         android:textSize="17dp"
         android:textStyle="bold"/>

@@ -80,7 +80,7 @@ class MSGame {
             }
         }
 
-        bombsPosition = placeBombs(m,n,b);
+        bombsPosition = placeBombs(m,n,b,-1,-1);
 
 
         for(int i=0;i<b;i++){
@@ -120,11 +120,78 @@ class MSGame {
        // Log.i("hg","gh");
     }
 
-    private int[][] placeBombs(int m, int n, int b) {
+
+    MSGame(int m, int n, int b,int bob_i,int bomb_j) {
+
+
+        rewarded=0;
+        rows=m;
+        cols=n;
+        noOfBombs=b;
+        bombsLeft=b;
+        bombsPosition=new int[noOfBombs][2];
+        gridsStatus=new Grid[rows][cols];
+
+        for(int i=0;i<m;i++){
+            for(int j=0;j<n;j++)
+            {
+                gridsStatus[i][j]=new Grid(0,0,0,0);
+            }
+        }
+
+        bombsPosition = placeBombs(m,n,b,bob_i,bomb_j);
+
+
+        for(int i=0;i<b;i++){
+            gridsStatus[bombsPosition[i][0]][bombsPosition[i][1]]=new Grid(0,1,-1,0);
+        }
+
+
+        int x[]={0,0,1,1,1,-1,-1,-1};
+        int y[]={1,-1,0,1,-1,0,1,-1};
+
+        for(int i=0;i<m;i++){
+
+            for(int j=0;j<n;j++){
+
+                if(gridsStatus[i][j].getBomb()==1)
+                    continue;
+
+                gridsStatus[i][j]=new Grid(0,0,0,0);
+
+
+                int num=0;
+
+                for(int k=0;k<8;k++){
+                    int p=i+x[k];
+                    int q=j+y[k];
+
+                    if(p>=0 && p<m && q>=0 && q<n){
+                        num+=gridsStatus[p][q].getBomb();
+                    }
+                }
+
+                gridsStatus[i][j].setNumber(num);
+
+            }
+        }
+
+        // Log.i("hg","gh");
+    }
+
+
+    private int[][] placeBombs(int m, int n, int b,int bomb_i,int bomb_j) {
+
         int[][] bombs=new int[b][2];
         int total=m*n;
 
         int[] placed=new int[total];
+
+        if(bomb_i>=0 && bomb_j>=0)
+        {
+            placed[n*bomb_i+bomb_j]=1;
+        }
+
 
         Random rand=new Random();
 

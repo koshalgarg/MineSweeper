@@ -13,11 +13,11 @@
         android:id="@+id/txt_dia"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="A new version of game is available "
+        android:text="A newer version of game is available "
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:layout_marginBottom="10dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="16dp"
         android:textStyle="bold"/>
 
     <LinearLayout

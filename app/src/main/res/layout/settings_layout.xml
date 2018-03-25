@@ -62,6 +62,84 @@
 
     </RadioGroup>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/custom_ll"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Rows"
+            android:id="@+id/rows"
+            android:maxLength="2"
+            android:layout_weight="1"
+            android:textColor="#ffffff"
+            android:textColorHint="#ffffff"
+            android:backgroundTint="#ffffff"
+            android:inputType="number"
+            android:layout_marginRight="3dp"
+            />
+
+
+        <EditText
+            android:layout_weight="1"
+            android:id="@+id/cols"
+            android:maxLength="2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:hint="Cols"
+            android:backgroundTint="#ffffff"
+            android:textColor="#ffffff"
+            android:textColorHint="#ffffff"
+            android:inputType="number"
+            android:layout_marginRight="3dp"
+            />
+
+        <EditText
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:maxLength="3"
+            android:layout_height="wrap_content"
+            android:backgroundTint="#ffffff"
+            android:hint="Mines"
+            android:id="@+id/mines"
+            android:textColor="#ffffff"
+            android:textColorHint="#ffffff"
+            android:inputType="number"
+            />
+
+
+
+
+    </LinearLayout>
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:textColor="#ffffff"
+        android:visibility="gone"
+        android:textSize="16sp"
+        android:id="@+id/alert"
+        />
+
+    <Button
+        android:id="@+id/custom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:background="#FFFFFF"
+        android:layout_gravity="center"
+        android:clickable="true"
+        android:text="Custom"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/colorPrimary"
+        android:textStyle="bold" />
 
 
 
